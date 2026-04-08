@@ -19,7 +19,7 @@ export default function Badges() {
 
   return (
     <div data-testid="badges-page">
-      <div className="mb-8">
+      <div className="mb-8 animate-fade-in-up stagger-1">
         <p className="text-xs uppercase tracking-[0.2em] text-[#FACC15] mb-2 font-mono">ACHIEVEMENTS</p>
         <h2 className="font-['Outfit'] text-3xl font-bold tracking-tighter">Badges & Rewards</h2>
         <p className="text-sm text-white/40 font-mono mt-2">{earned.length} of {badges.length} badges earned</p>
@@ -33,8 +33,8 @@ export default function Badges() {
             {earned.map(badge => {
               const Icon = iconMap[badge.icon] || Zap;
               return (
-                <div key={badge.id} className="bg-[#0A0A0A] p-6 text-center group" data-testid={`badge-${badge.id}`}>
-                  <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-[#FACC15] mb-4 glow-accent">
+                <div key={badge.id} className="bg-[#0A0A0A] p-6 text-center group card-hover animate-fade-in-up" data-testid={`badge-${badge.id}`}>
+                  <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-[#FACC15] mb-4 glow-accent animate-float">
                     <Icon size={28} className="text-[#FACC15]" />
                   </div>
                   <h3 className="font-['Outfit'] font-semibold text-sm">{badge.name}</h3>

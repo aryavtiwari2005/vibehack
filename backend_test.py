@@ -306,6 +306,45 @@ class LearnHubAPITester:
             use_user=True
         )
 
+    def test_forum_ai_answer(self):
+        """Test forum AI answer"""
+        if not self.test_thread_id:
+            print("❌ No thread ID available for testing")
+            return False
+        success, response = self.run_test(
+            "Forum AI Answer",
+            "POST",
+            f"forum/threads/{self.test_thread_id}/ai-answer",
+            200,
+            use_user=True
+        )
+        if success:
+            print(f"   AI Answer: {response.get('content', '')[:100]}...")
+        return success
+
+    def test_study_rooms_get(self):
+        """Test getting study rooms"""
+        return self.run_test("Get Study Rooms", "GET", "rooms", 200, use_user=True)
+
+    def test_study_rooms_create(self):
+        """Test creating study room"""
+        success, response = self.run_test(
+            "Create Study Room",
+            "POST",
+            "rooms",
+            200,
+            data={
+                "name": "Test Study Room",
+                "topic": "Python Programming",
+                "max_participants": 4
+            },
+            use_user=True
+        )
+        if success and 'id' in response:
+            print(f"   Created room: {response['id']}")
+            return True
+        return False
+
     def test_logout(self):
         """Test logout"""
         return self.run_test("Logout", "POST", "auth/logout", 200, use_user=True)
@@ -351,6 +390,11 @@ def main():
         tester.test_sandbox_execute,
         tester.test_ai_learning_path,
         tester.test_ai_chat,
+        tester.test_forum_ai_answer,
+        
+        # Study Rooms tests
+        tester.test_study_rooms_get,
+        tester.test_study_rooms_create,
         
         # Cleanup
         tester.test_logout,

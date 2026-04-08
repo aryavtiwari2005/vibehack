@@ -4,23 +4,23 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, WebSocket, WebSocketDisconnect
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 import os
 import logging
 import uuid
 import bcrypt
 import jwt
-import httpx
 import json
 import secrets
 import subprocess
 import tempfile
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Dict, Set
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -367,10 +367,7 @@ async def ai_answer_thread(thread_id: str, request: Request):
     context = f"Question: {thread['title']}\n{thread['content']}\n"
     for r in replies:
         context += f"\nReply by {r['user_name']}: {r['content']}"
-    ai_response = await call_openrouter([
-        {"role": "system", "content": "You are a helpful educational assistant. Provide clear, detailed answers to student questions. Use examples where appropriate."},
-        {"role": "user", "content": context}
-    ])
+    ai_response = await call_llm(context, "You are a helpful educational assistant. Provide clear, detailed answers to student questions. Use examples where appropriate.")
     reply = {
         "id": str(uuid.uuid4()),
         "thread_id": thread_id,
@@ -385,24 +382,20 @@ async def ai_answer_thread(thread_id: str, request: Request):
     await db.forum_threads.update_one({"id": thread_id}, {"$inc": {"replies_count": 1}})
     return reply
 
-# ---------- AI / OPENROUTER ----------
-async def call_openrouter(messages, model="openai/gpt-4o"):
-    api_key = os.environ.get("OPENROUTER_API_KEY", "")
+# ---------- AI / EMERGENT LLM ----------
+async def call_llm(prompt: str, system_message: str = "You are a helpful educational AI tutor.") -> str:
+    api_key = os.environ.get("EMERGENT_LLM_KEY", "")
     try:
-        async with httpx.AsyncClient(timeout=60) as http_client:
-            resp = await http_client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "HTTP-Referer": "https://student-learning-platform.com",
-                    "X-Title": "Student Learning Platform"
-                },
-                json={"model": model, "messages": messages}
-            )
-            data = resp.json()
-            return data.get("choices", [{}])[0].get("message", {}).get("content", "I couldn't generate a response. Please try again.")
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"learnhub-{uuid.uuid4()}",
+            system_message=system_message
+        ).with_model("openai", "gpt-4o")
+        user_message = UserMessage(text=prompt)
+        response = await chat.send_message(user_message)
+        return response
     except Exception as e:
-        logging.error(f"OpenRouter error: {e}")
+        logging.error(f"LLM error: {e}")
         return "AI service is temporarily unavailable. Please try again later."
 
 @api_router.post("/ai/learning-path")
@@ -429,10 +422,7 @@ Provide recommendations in this JSON format:
 
 Only return the JSON array, no other text."""
 
-    response = await call_openrouter([
-        {"role": "system", "content": "You are an AI learning advisor. Analyze student progress and recommend personalized next steps. Always respond with valid JSON."},
-        {"role": "user", "content": prompt}
-    ])
+    response = await call_llm(prompt, "You are an AI learning advisor. Analyze student progress and recommend personalized next steps. Always respond with valid JSON.")
     try:
         cleaned = response.strip()
         if cleaned.startswith("```"):
@@ -449,9 +439,8 @@ async def ai_chat(request: Request):
     messages = body.get("messages", [])
     if not messages:
         raise HTTPException(status_code=400, detail="Messages required")
-    system_msg = {"role": "system", "content": "You are a helpful educational AI tutor. Help students understand concepts, solve problems, and learn effectively. Be encouraging and thorough in your explanations."}
-    all_messages = [system_msg] + messages
-    response = await call_openrouter(all_messages)
+    last_msg = messages[-1].get("content", "") if messages else ""
+    response = await call_llm(last_msg, "You are a helpful educational AI tutor. Help students understand concepts, solve problems, and learn effectively. Be encouraging and thorough in your explanations.")
     return {"response": response}
 
 # ---------- CODING SANDBOX ----------
@@ -507,6 +496,123 @@ async def dashboard_stats(request: Request):
         "xp": xp,
         "level": level
     }
+
+# ---------- STUDY ROOMS (WebSocket Signaling) ----------
+class RoomManager:
+    def __init__(self):
+        self.rooms: Dict[str, Dict[str, WebSocket]] = {}
+    
+    async def connect(self, room_id: str, user_id: str, websocket: WebSocket):
+        await websocket.accept()
+        if room_id not in self.rooms:
+            self.rooms[room_id] = {}
+        self.rooms[room_id][user_id] = websocket
+    
+    def disconnect(self, room_id: str, user_id: str):
+        if room_id in self.rooms:
+            self.rooms[room_id].pop(user_id, None)
+            if not self.rooms[room_id]:
+                del self.rooms[room_id]
+    
+    async def broadcast(self, room_id: str, message: dict, exclude_user: str = None):
+        if room_id not in self.rooms:
+            return
+        for uid, ws in list(self.rooms[room_id].items()):
+            if uid != exclude_user:
+                try:
+                    await ws.send_json(message)
+                except Exception:
+                    self.rooms[room_id].pop(uid, None)
+    
+    async def send_to(self, room_id: str, user_id: str, message: dict):
+        if room_id in self.rooms and user_id in self.rooms[room_id]:
+            try:
+                await self.rooms[room_id][user_id].send_json(message)
+            except Exception:
+                pass
+    
+    def get_participants(self, room_id: str) -> list:
+        if room_id not in self.rooms:
+            return []
+        return list(self.rooms[room_id].keys())
+
+room_manager = RoomManager()
+
+@api_router.get("/rooms")
+async def get_rooms(request: Request):
+    await get_current_user(request)
+    rooms = await db.study_rooms.find({}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    for room in rooms:
+        room["participants_count"] = len(room_manager.get_participants(room["id"]))
+    return rooms
+
+@api_router.post("/rooms")
+async def create_room(request: Request):
+    user = await get_current_user(request)
+    body = await request.json()
+    room = {
+        "id": str(uuid.uuid4()),
+        "name": body["name"],
+        "topic": body.get("topic", ""),
+        "created_by": user["_id"],
+        "creator_name": user.get("name", "Anonymous"),
+        "max_participants": body.get("max_participants", 6),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "participants_count": 0
+    }
+    await db.study_rooms.insert_one(room)
+    room.pop("_id", None)
+    return room
+
+@app.websocket("/ws/room/{room_id}/{user_id}/{user_name}")
+async def websocket_room(websocket: WebSocket, room_id: str, user_id: str, user_name: str):
+    await room_manager.connect(room_id, user_id, websocket)
+    await room_manager.broadcast(room_id, {
+        "type": "user-joined",
+        "userId": user_id,
+        "userName": user_name,
+        "participants": room_manager.get_participants(room_id)
+    }, exclude_user=user_id)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            if data.get("type") == "offer" and data.get("target"):
+                await room_manager.send_to(room_id, data["target"], {
+                    "type": "offer",
+                    "offer": data["offer"],
+                    "from": user_id,
+                    "fromName": user_name
+                })
+            elif data.get("type") == "answer" and data.get("target"):
+                await room_manager.send_to(room_id, data["target"], {
+                    "type": "answer",
+                    "answer": data["answer"],
+                    "from": user_id
+                })
+            elif data.get("type") == "ice-candidate" and data.get("target"):
+                await room_manager.send_to(room_id, data["target"], {
+                    "type": "ice-candidate",
+                    "candidate": data["candidate"],
+                    "from": user_id
+                })
+            elif data.get("type") == "chat-message":
+                await room_manager.broadcast(room_id, {
+                    "type": "chat-message",
+                    "from": user_id,
+                    "fromName": user_name,
+                    "message": data.get("message", ""),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+    except WebSocketDisconnect:
+        room_manager.disconnect(room_id, user_id)
+        await room_manager.broadcast(room_id, {
+            "type": "user-left",
+            "userId": user_id,
+            "userName": user_name,
+            "participants": room_manager.get_participants(room_id)
+        })
+    except Exception:
+        room_manager.disconnect(room_id, user_id)
 
 # ---------- HEALTH ----------
 @api_router.get("/")

@@ -45,13 +45,13 @@ export default function Sandbox() {
 
   return (
     <div data-testid="sandbox-page">
-      <div className="mb-6">
+      <div className="mb-6 animate-fade-in-up stagger-1">
         <p className="text-xs uppercase tracking-[0.2em] text-[#FACC15] mb-2 font-mono">CODE SANDBOX</p>
         <h2 className="font-['Outfit'] text-3xl font-bold tracking-tighter">Interactive Python Editor</h2>
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3 mb-4 border border-white/15 p-3">
+      <div className="flex items-center gap-3 mb-4 border border-white/15 p-3 animate-fade-in-up stagger-2">
         <button
           onClick={runCode}
           disabled={running}

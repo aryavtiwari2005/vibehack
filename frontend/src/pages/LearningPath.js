@@ -48,13 +48,13 @@ export default function LearningPath() {
 
   return (
     <div data-testid="learning-path-page">
-      <div className="mb-8">
+      <div className="mb-8 animate-fade-in-up stagger-1">
         <p className="text-xs uppercase tracking-[0.2em] text-[#FACC15] mb-2 font-mono">AI LEARNING PATH</p>
         <h2 className="font-['Outfit'] text-3xl font-bold tracking-tighter">Your Personalized Curriculum</h2>
       </div>
 
       {/* AI Recommendations */}
-      <div className="border border-white/15 mb-8 p-6">
+      <div className="border border-white/15 mb-8 p-6 animate-fade-in-up stagger-2 shimmer-bg">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Brain size={20} className="text-[#FACC15]" />

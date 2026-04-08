@@ -10,6 +10,7 @@ import Badges from "@/pages/Badges";
 import Planner from "@/pages/Planner";
 import Forum from "@/pages/Forum";
 import ThreadDetail from "@/pages/ThreadDetail";
+import StudyRooms from "@/pages/StudyRooms";
 import AppLayout from "@/components/AppLayout";
 
 function ProtectedRoute({ children }) {
@@ -48,6 +49,7 @@ function App() {
             <Route path="/sandbox" element={<Sandbox />} />
             <Route path="/badges" element={<Badges />} />
             <Route path="/planner" element={<Planner />} />
+            <Route path="/study-rooms" element={<StudyRooms />} />
             <Route path="/forum" element={<Forum />} />
             <Route path="/forum/:threadId" element={<ThreadDetail />} />
           </Route>

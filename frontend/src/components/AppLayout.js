@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Route, Code2, Trophy, CalendarDays, MessageSquare, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Route, Code2, Trophy, CalendarDays, MessageSquare, LogOut, Menu, X, Video } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { to: "/sandbox", label: "Code Sandbox", icon: Code2 },
   { to: "/badges", label: "Badges", icon: Trophy },
   { to: "/planner", label: "Planner", icon: CalendarDays },
+  { to: "/study-rooms", label: "Study Rooms", icon: Video },
   { to: "/forum", label: "Q&A Forum", icon: MessageSquare },
 ];
 
