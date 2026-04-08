@@ -5,18 +5,26 @@ const API = axios.create({
   withCredentials: true,
 });
 
+// Add token from localStorage to every request
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem("auth_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 API.interceptors.response.use(
   (res) => res,
   async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/auth/")) {
-      originalRequest._retry = true;
+    if (error.response?.status === 401 && !error.config._retry && !error.config.url?.includes("/auth/")) {
+      error.config._retry = true;
       try {
-        await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/refresh`, {}, { withCredentials: true });
-        return API(originalRequest);
+        await API.post("/auth/refresh");
+        return API(error.config);
       } catch {
+        localStorage.removeItem("auth_token");
         window.location.href = "/login";
-        return Promise.reject(error);
       }
     }
     return Promise.reject(error);

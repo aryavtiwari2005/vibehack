@@ -8,10 +8,17 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const checkAuth = useCallback(async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      setUser(false);
+      setLoading(false);
+      return;
+    }
     try {
       const { data } = await API.get("/auth/me");
       setUser(data);
     } catch {
+      localStorage.removeItem("auth_token");
       setUser(false);
     } finally {
       setLoading(false);
@@ -22,18 +29,21 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const { data } = await API.post("/auth/login", { email, password });
+    if (data.token) localStorage.setItem("auth_token", data.token);
     setUser(data);
     return data;
   };
 
   const register = async (email, password, name) => {
     const { data } = await API.post("/auth/register", { email, password, name });
+    if (data.token) localStorage.setItem("auth_token", data.token);
     setUser(data);
     return data;
   };
 
   const logout = async () => {
-    await API.post("/auth/logout");
+    try { await API.post("/auth/logout"); } catch {}
+    localStorage.removeItem("auth_token");
     setUser(false);
   };
 
