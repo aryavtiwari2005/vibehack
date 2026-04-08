@@ -1,0 +1,108 @@
+{
+  "theme": "Dark",
+  "archetype": "Performance Pro (Tactical & Gamified)",
+  "color_palette": {
+    "description": "Strict 3-color palette: Deep Obsidian (Base), Pure White (Text/Borders), Cyber Yellow (Accent)",
+    "colors": {
+      "background": "#0A0A0A",
+      "text_primary": "#FFFFFF",
+      "accent_primary": "#FACC15",
+      "border": "rgba(255, 255, 255, 0.15)",
+      "surface": "#121212"
+    },
+    "shadcn_variables": {
+      "dark": {
+        "background": "0 0% 4%",
+        "foreground": "0 0% 100%",
+        "card": "0 0% 4%",
+        "card-foreground": "0 0% 100%",
+        "popover": "0 0% 4%",
+        "popover-foreground": "0 0% 100%",
+        "primary": "51 98% 53%",
+        "primary-foreground": "0 0% 4%",
+        "secondary": "0 0% 15%",
+        "secondary-foreground": "0 0% 100%",
+        "muted": "0 0% 15%",
+        "muted-foreground": "0 0% 70%",
+        "accent": "0 0% 10%",
+        "accent-foreground": "0 0% 100%",
+        "destructive": "0 84.2% 60.2%",
+        "destructive-foreground": "0 0% 98%",
+        "border": "0 0% 15%",
+        "input": "0 0% 15%",
+        "ring": "51 98% 53%",
+        "radius": "0rem"
+      }
+    }
+  },
+  "typography": {
+    "heading_font": "Outfit",
+    "body_font": "JetBrains Mono",
+    "rules": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tighter font-bold text-white",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-semibold text-white",
+      "h3": "text-xl sm:text-2xl tracking-tight font-medium text-white",
+      "body": "text-base leading-relaxed text-white/80 font-mono",
+      "code": "font-mono text-sm tracking-tight",
+      "overline": "text-xs uppercase tracking-[0.2em] text-[#FACC15]"
+    }
+  },
+  "layout_and_spacing": {
+    "container_padding": "p-6 md:p-8 lg:p-12",
+    "grid_system": {
+      "marketing": "grid-cols-1 md:grid-cols-12 gap-8 (Mode A: Tetris Grid)",
+      "dashboard": "grid-cols-1 md:grid-cols-4 gap-4 (Mode B: Control Room Grid)"
+    },
+    "borders_and_surfaces": "1px solid border-white/15, zero border radius (rounded-none), no soft drop shadows. Use hard 4px offset shadows for brutalist accents if needed."
+  },
+  "motion_and_interaction": {
+    "hover_states": "hover:bg-accent hover:text-white transition-colors duration-200",
+    "focus_states": "focus:outline-none focus:ring-2 focus:ring-[#FACC15] focus:ring-offset-2 focus:ring-offset-[#0A0A0A]",
+    "animations": "Framer Motion for micro-interactions. Example: Button click scale-down (scale: 0.98)."
+  },
+  "components": {
+    "buttons": "Square edges (rounded-none), bold uppercase text tracking-wider, bg-[#FACC15] text-[#0A0A0A] for primary. Outline with hover:bg-white/10 for secondary.",
+    "cards": "Flat background (#0A0A0A), 1px solid white/15 border, internal padding p-6. No glassmorphism, stick to opaque solid surfaces.",
+    "inputs": "Flat, bottom border only or full 1px square border, bg-transparent.",
+    "tabs": "Square underline style, active tab gets border-b-2 border-[#FACC15] text-[#FACC15]."
+  },
+  "media": {
+    "image_urls": {
+      "hero_background": {
+        "url": "https://images.unsplash.com/photo-1771875802933-96402f31a45a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2ODl8MHwxfHNlYXJjaHwxfHxkYXJrJTIwdGVjaCUyMGJhY2tncm91bmQlMjBuZW9uJTIweWVsbG93fGVufDB8fHx8MTc3NTYzOTkzNXww&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract neon yellow tech background for the landing page hero section overlay."
+      },
+      "gamification_badge": {
+        "url": "https://images.unsplash.com/photo-1729551493061-abfc44fd1415?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTZ8MHwxfHNlYXJjaHwxfHwzZCUyMG5lb24lMjB5ZWxsb3clMjBnbG93aW5nJTIwYmFkZ2UlMjBkYXJrJTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3NzU2Mzk5MzV8MA&ixlib=rb-4.1.0&q=85",
+        "description": "3D glowing badge to represent unlocked achievements in the gamified progress section."
+      },
+      "student_coding": {
+        "url": "https://images.unsplash.com/photo-1719400471588-575b23e27bd7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwY29kaW5nJTIwZGFyayUyMHJvb218ZW58MHx8fHwxNzc1NjM5OTMxfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Student coding in a dark room setup for the feature highlight section."
+      },
+      "developer_avatar": {
+        "url": "https://images.unsplash.com/photo-1670254147326-05ef9b7de76f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1OTV8MHwxfHNlYXJjaHwyfHxkZXZlbG9wZXIlMjBwb3J0cmFpdCUyMGRhcmt8ZW58MHx8fHwxNzc1NjM5OTMxfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Avatar placeholder for the student profile and Q&A forum replies."
+      }
+    }
+  },
+  "specific_feature_guidelines": {
+    "coding_sandbox": "Use a split-pane layout (e.g., react-split) with a dark theme code editor (Monaco or CodeMirror) on the left and a terminal output on the right. Maintain strict 1px borders.",
+    "gamified_progress": "Display a bento grid of badges. Inactive badges should be grayscale and 0.4 opacity. Active badges glow with the #FACC15 accent color and use a subtle drop-shadow.",
+    "study_planner": "Drag-and-drop kanban/calendar using dnd-kit. Cards should snap to grid. Use solid borders and high-contrast text.",
+    "qa_forum": "Threaded layout with vertical indentation lines on the left (border-l border-white/10). AI moderator replies should be distinctly highlighted with a #FACC15 left border."
+  },
+  "accessibility_and_testing": {
+    "testing_attributes": "All interactive elements MUST have data-testid attributes (e.g., data-testid='run-code-button', data-testid='login-submit-button').",
+    "contrast": "Ensure pure white text on deep obsidian background passes WCAG AAA. Cyber Yellow text on dark background passes AA."
+  },
+  "instructions_to_main_agent": [
+    "Strictly adhere to the 3-color palette constraint: #0A0A0A (Black), #FFFFFF (White), #FACC15 (Yellow). No extra colors.",
+    "Update /app/frontend/src/index.css to match the provided Shadcn variables. Add font-imports for 'Outfit' and 'JetBrains Mono'.",
+    "Do not use generic border radii; set '--radius: 0rem' to enforce sharp corners (rounded-none) for a technical brutalist feel.",
+    "For the drag-and-drop Study Planner, utilize @dnd-kit/core and @dnd-kit/sortable.",
+    "Ensure all Shadcn components are updated to remove soft shadows in favor of hard 1px borders.",
+    "Use Phosphor icons or Lucide icons with sharp styling.",
+    "Do not use generic UI filler; build asymmetrical grids following the 'Tetris' rule for the landing page."
+  ]
+}
