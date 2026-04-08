@@ -12,113 +12,88 @@ export default function LearningPath() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      API.get("/courses"),
-      API.get("/progress")
-    ]).then(([c, p]) => {
-      setCourses(c.data);
-      setProgress(p.data);
-    }).catch(() => {}).finally(() => setLoading(false));
+    Promise.all([API.get("/courses"), API.get("/progress")]).then(([c, p]) => { setCourses(c.data); setProgress(p.data); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const getRecommendations = async () => {
     setLoadingRec(true);
-    try {
-      const { data } = await API.post("/ai/learning-path");
-      setRecommendations(data.recommendations || []);
-      setProgressSummary(data.progress_summary || "");
-    } catch { }
+    try { const { data } = await API.post("/ai/learning-path"); setRecommendations(data.recommendations || []); setProgressSummary(data.progress_summary || ""); } catch { }
     setLoadingRec(false);
   };
 
   const completeLesson = async (courseId, lessonId) => {
-    try {
-      await API.post("/progress", { course_id: courseId, lesson_id: lessonId, score: 85 });
-      await API.post("/badges/check");
-      const { data } = await API.get("/progress");
-      setProgress(data);
-    } catch { }
+    try { await API.post("/progress", { course_id: courseId, lesson_id: lessonId, score: 85 }); await API.post("/badges/check"); const { data } = await API.get("/progress"); setProgress(data); } catch { }
   };
 
-  const isCompleted = (courseId, lessonId) => {
-    return progress.some(p => p.course_id === courseId && p.lesson_id === lessonId);
-  };
+  const isCompleted = (courseId, lessonId) => progress.some(p => p.course_id === courseId && p.lesson_id === lessonId);
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-[#FACC15] border-t-transparent animate-spin" /></div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" /></div>;
 
   return (
     <div data-testid="learning-path-page">
       <div className="mb-8 animate-fade-in-up stagger-1">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#FACC15] mb-2 font-mono">AI LEARNING PATH</p>
-        <h2 className="font-['Outfit'] text-3xl font-bold tracking-tighter">Your Personalized Curriculum</h2>
+        <p className="text-sm font-semibold text-[#1E3A8A] mb-1 font-['Outfit']">AI Learning Path</p>
+        <h2 className="font-['Outfit'] text-3xl font-bold tracking-tight text-[#1E293B]">Your Personalized Curriculum</h2>
       </div>
 
       {/* AI Recommendations */}
-      <div className="border border-white/15 mb-8 p-6 animate-fade-in-up stagger-2 shimmer-bg">
+      <div className="bg-white rounded-xl border border-[#E2E8F0] mb-8 p-6 animate-fade-in-up stagger-2 shimmer-bg">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <Brain size={20} className="text-[#FACC15]" />
-            <h3 className="font-['Outfit'] text-lg font-semibold">AI Recommendations</h3>
+            <div className="w-9 h-9 rounded-lg bg-[#1E3A8A]/10 flex items-center justify-center"><Brain size={18} className="text-[#1E3A8A]" /></div>
+            <h3 className="font-['Outfit'] text-lg font-semibold text-[#1E293B]">AI Recommendations</h3>
           </div>
-          <button
-            onClick={getRecommendations}
-            disabled={loadingRec}
-            className="bg-[#FACC15] text-[#0A0A0A] px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-[#FACC15]/90 transition-colors font-['Outfit'] disabled:opacity-50 flex items-center gap-2"
-            data-testid="get-recommendations-button"
-          >
-            {loadingRec ? <><Loader2 size={14} className="animate-spin" /> ANALYZING...</> : "GET RECOMMENDATIONS"}
+          <button onClick={getRecommendations} disabled={loadingRec}
+            className="bg-[#1E3A8A] text-white px-4 py-2 text-xs font-semibold rounded-lg hover:bg-[#1E3A8A]/90 transition-all btn-press font-['Outfit'] disabled:opacity-50 flex items-center gap-2"
+            data-testid="get-recommendations-button">
+            {loadingRec ? <><Loader2 size={14} className="animate-spin" /> Analyzing...</> : "Get Recommendations"}
           </button>
         </div>
-        {progressSummary && <p className="text-xs text-white/40 font-mono mb-4">{progressSummary}</p>}
+        {progressSummary && <p className="text-xs text-[#64748B] font-mono mb-4">{progressSummary}</p>}
         {recommendations.length > 0 ? (
           <div className="space-y-3">
             {recommendations.map((rec, i) => (
-              <div key={i} className="border border-white/10 p-4 hover:bg-white/5 transition-colors">
+              <div key={i} className="rounded-lg border border-[#E2E8F0] p-4 hover:bg-[#F9FAFB] transition-colors">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="font-['Outfit'] font-semibold text-sm">{rec.title}</h4>
-                    <p className="text-xs text-white/50 font-mono mt-1">{rec.reason}</p>
+                    <h4 className="font-['Outfit'] font-semibold text-sm text-[#1E293B]">{rec.title}</h4>
+                    <p className="text-xs text-[#64748B] font-mono mt-1">{rec.reason}</p>
                   </div>
-                  <span className={`text-[10px] uppercase tracking-wider font-mono px-2 py-1 ${rec.priority === "high" ? "bg-[#FACC15]/20 text-[#FACC15]" : "bg-white/10 text-white/50"}`}>
-                    {rec.priority}
-                  </span>
+                  <span className={`text-[10px] font-mono font-semibold px-2 py-1 rounded ${rec.priority === "high" ? "bg-[#1E3A8A]/10 text-[#1E3A8A]" : "bg-[#F1F5F9] text-[#64748B]"}`}>{rec.priority}</span>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-white/30 font-mono">Click the button above to get AI-powered learning recommendations.</p>
+          <p className="text-sm text-[#94A3B8] font-mono">Click the button above to get AI-powered learning recommendations.</p>
         )}
       </div>
 
       {/* Courses */}
-      <p className="text-xs uppercase tracking-[0.2em] text-[#FACC15] mb-4 font-mono">AVAILABLE COURSES</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/15 mb-6">
+      <p className="text-sm font-semibold text-[#1E3A8A] mb-3 font-['Outfit']">Available Courses</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {courses.map((course) => {
           const completed = course.lessons?.filter(l => isCompleted(course.id, l.id)).length || 0;
           const total = course.lessons?.length || 0;
           return (
-            <button
-              key={course.id}
-              onClick={() => setSelectedCourse(selectedCourse?.id === course.id ? null : course)}
-              className={`bg-[#0A0A0A] p-6 text-left hover:bg-[#121212] transition-colors ${selectedCourse?.id === course.id ? "bg-[#121212]" : ""}`}
-              data-testid={`course-card-${course.id}`}
-            >
+            <button key={course.id} onClick={() => setSelectedCourse(selectedCourse?.id === course.id ? null : course)}
+              className={`bg-white rounded-xl border border-[#E2E8F0] p-5 text-left card-hover ${selectedCourse?.id === course.id ? "ring-2 ring-[#60A5FA]" : ""}`}
+              data-testid={`course-card-${course.id}`}>
               <div className="flex items-start justify-between">
                 <div>
-                  <span className="text-[10px] uppercase tracking-wider text-[#FACC15] font-mono">{course.category} &middot; {course.difficulty}</span>
-                  <h3 className="font-['Outfit'] text-lg font-semibold mt-1">{course.title}</h3>
-                  <p className="text-xs text-white/40 font-mono mt-1">{course.description}</p>
+                  <span className="text-[10px] font-mono font-semibold text-[#60A5FA]">{course.category} &middot; {course.difficulty}</span>
+                  <h3 className="font-['Outfit'] text-base font-semibold mt-1 text-[#1E293B]">{course.title}</h3>
+                  <p className="text-xs text-[#64748B] font-mono mt-1">{course.description}</p>
                 </div>
-                <ChevronRight size={18} className={`text-white/30 transition-transform ${selectedCourse?.id === course.id ? "rotate-90" : ""}`} />
+                <ChevronRight size={18} className={`text-[#94A3B8] transition-transform ${selectedCourse?.id === course.id ? "rotate-90 text-[#60A5FA]" : ""}`} />
               </div>
               <div className="mt-4">
-                <div className="flex justify-between text-[10px] text-white/40 font-mono mb-1">
-                  <span>{completed}/{total} LESSONS</span>
+                <div className="flex justify-between text-[10px] text-[#94A3B8] font-mono mb-1">
+                  <span>{completed}/{total} lessons</span>
                   <span>{total > 0 ? Math.round((completed / total) * 100) : 0}%</span>
                 </div>
-                <div className="h-1 bg-white/10 w-full">
-                  <div className="h-full bg-[#FACC15] transition-all" style={{ width: `${total > 0 ? (completed / total) * 100 : 0}%` }} />
+                <div className="h-1.5 bg-[#F1F5F9] rounded-full w-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#1E3A8A] to-[#60A5FA] rounded-full transition-all" style={{ width: `${total > 0 ? (completed / total) * 100 : 0}%` }} />
                 </div>
               </div>
             </button>
@@ -128,28 +103,24 @@ export default function LearningPath() {
 
       {/* Lessons */}
       {selectedCourse && (
-        <div className="border border-white/15 p-6" data-testid="course-lessons">
-          <h3 className="font-['Outfit'] text-xl font-semibold mb-4">{selectedCourse.title} — Lessons</h3>
+        <div className="bg-white rounded-xl border border-[#E2E8F0] p-6 animate-scale-in" data-testid="course-lessons">
+          <h3 className="font-['Outfit'] text-xl font-semibold mb-4 text-[#1E293B]">{selectedCourse.title} — Lessons</h3>
           <div className="space-y-2">
             {selectedCourse.lessons?.map((lesson) => {
               const done = isCompleted(selectedCourse.id, lesson.id);
               return (
-                <div key={lesson.id} className={`flex items-center justify-between p-4 border border-white/10 ${done ? "bg-[#FACC15]/5" : "hover:bg-white/5"} transition-colors`}>
+                <div key={lesson.id} className={`flex items-center justify-between p-4 rounded-lg border ${done ? "border-[#34D399]/30 bg-[#34D399]/5" : "border-[#E2E8F0] hover:bg-[#F9FAFB]"} transition-colors`}>
                   <div className="flex items-center gap-3">
-                    {done ? <CheckCircle size={18} className="text-[#FACC15]" /> : <BookOpen size={18} className="text-white/30" />}
+                    {done ? <CheckCircle size={18} className="text-[#34D399]" /> : <BookOpen size={18} className="text-[#94A3B8]" />}
                     <div>
-                      <p className="text-sm font-medium">{lesson.title}</p>
-                      <p className="text-xs text-white/40 font-mono">{lesson.content}</p>
+                      <p className="text-sm font-medium text-[#1E293B]">{lesson.title}</p>
+                      <p className="text-xs text-[#64748B] font-mono">{lesson.content}</p>
                     </div>
                   </div>
                   {!done && (
-                    <button
-                      onClick={() => completeLesson(selectedCourse.id, lesson.id)}
-                      className="text-xs bg-[#FACC15] text-[#0A0A0A] px-3 py-1.5 font-bold uppercase tracking-wider hover:bg-[#FACC15]/90 font-['Outfit']"
-                      data-testid={`complete-lesson-${lesson.id}`}
-                    >
-                      COMPLETE
-                    </button>
+                    <button onClick={() => completeLesson(selectedCourse.id, lesson.id)}
+                      className="text-xs bg-[#34D399] text-[#1E293B] px-3 py-1.5 font-semibold rounded-lg hover:bg-[#34D399]/90 btn-press font-['Outfit']"
+                      data-testid={`complete-lesson-${lesson.id}`}>Complete</button>
                   )}
                 </div>
               );

@@ -18,6 +18,7 @@ import json
 import secrets
 import subprocess
 import tempfile
+import asyncio
 from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Set
@@ -501,22 +502,26 @@ async def dashboard_stats(request: Request):
 class RoomManager:
     def __init__(self):
         self.rooms: Dict[str, Dict[str, WebSocket]] = {}
+        self.room_activity: Dict[str, datetime] = {}
     
     async def connect(self, room_id: str, user_id: str, websocket: WebSocket):
         await websocket.accept()
         if room_id not in self.rooms:
             self.rooms[room_id] = {}
         self.rooms[room_id][user_id] = websocket
+        self.room_activity[room_id] = datetime.now(timezone.utc)
     
     def disconnect(self, room_id: str, user_id: str):
         if room_id in self.rooms:
             self.rooms[room_id].pop(user_id, None)
             if not self.rooms[room_id]:
                 del self.rooms[room_id]
+                self.room_activity.pop(room_id, None)
     
     async def broadcast(self, room_id: str, message: dict, exclude_user: str = None):
         if room_id not in self.rooms:
             return
+        self.room_activity[room_id] = datetime.now(timezone.utc)
         for uid, ws in list(self.rooms[room_id].items()):
             if uid != exclude_user:
                 try:
@@ -535,6 +540,14 @@ class RoomManager:
         if room_id not in self.rooms:
             return []
         return list(self.rooms[room_id].keys())
+    
+    def get_inactive_rooms(self, timeout_minutes: int = 10) -> list:
+        now = datetime.now(timezone.utc)
+        inactive = []
+        for rid, last in list(self.room_activity.items()):
+            if (now - last).total_seconds() > timeout_minutes * 60:
+                inactive.append(rid)
+        return inactive
 
 room_manager = RoomManager()
 
@@ -558,44 +571,71 @@ async def create_room(request: Request):
         "creator_name": user.get("name", "Anonymous"),
         "max_participants": body.get("max_participants", 6),
         "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_activity": datetime.now(timezone.utc).isoformat(),
         "participants_count": 0
     }
     await db.study_rooms.insert_one(room)
     room.pop("_id", None)
     return room
 
-@app.websocket("/ws/room/{room_id}/{user_id}/{user_name}")
+@api_router.delete("/rooms/{room_id}")
+async def delete_room(room_id: str, request: Request):
+    await get_current_user(request)
+    await db.study_rooms.delete_one({"id": room_id})
+    return {"message": "Room deleted"}
+
+# WebSocket MUST be under /api/ prefix for Kubernetes ingress routing
+@app.websocket("/api/ws/room/{room_id}/{user_id}/{user_name}")
 async def websocket_room(websocket: WebSocket, room_id: str, user_id: str, user_name: str):
+    # Update room last_activity in DB
+    await db.study_rooms.update_one({"id": room_id}, {"$set": {"last_activity": datetime.now(timezone.utc).isoformat()}})
+    
+    # Get existing participants BEFORE connecting new user
+    existing_participants = room_manager.get_participants(room_id)
+    
     await room_manager.connect(room_id, user_id, websocket)
+    
+    # Tell the NEW user about ALL existing participants so they can initiate offers
+    if existing_participants:
+        await room_manager.send_to(room_id, user_id, {
+            "type": "existing-participants",
+            "participants": existing_participants
+        })
+    
+    # Tell existing participants about the new user
     await room_manager.broadcast(room_id, {
         "type": "user-joined",
         "userId": user_id,
         "userName": user_name,
         "participants": room_manager.get_participants(room_id)
     }, exclude_user=user_id)
+    
     try:
         while True:
             data = await websocket.receive_json()
-            if data.get("type") == "offer" and data.get("target"):
-                await room_manager.send_to(room_id, data["target"], {
+            msg_type = data.get("type")
+            target = data.get("target")
+            
+            if msg_type == "offer" and target:
+                await room_manager.send_to(room_id, target, {
                     "type": "offer",
                     "offer": data["offer"],
                     "from": user_id,
                     "fromName": user_name
                 })
-            elif data.get("type") == "answer" and data.get("target"):
-                await room_manager.send_to(room_id, data["target"], {
+            elif msg_type == "answer" and target:
+                await room_manager.send_to(room_id, target, {
                     "type": "answer",
                     "answer": data["answer"],
                     "from": user_id
                 })
-            elif data.get("type") == "ice-candidate" and data.get("target"):
-                await room_manager.send_to(room_id, data["target"], {
+            elif msg_type == "ice-candidate" and target:
+                await room_manager.send_to(room_id, target, {
                     "type": "ice-candidate",
                     "candidate": data["candidate"],
                     "from": user_id
                 })
-            elif data.get("type") == "chat-message":
+            elif msg_type == "chat-message":
                 await room_manager.broadcast(room_id, {
                     "type": "chat-message",
                     "from": user_id,
@@ -718,9 +758,31 @@ async def seed_data():
         f.write("## Test User\n- Register a new user via /api/auth/register\n\n")
         f.write("## Auth Endpoints\n- POST /api/auth/register\n- POST /api/auth/login\n- POST /api/auth/logout\n- GET /api/auth/me\n- POST /api/auth/refresh\n")
 
+async def room_cleanup_task():
+    """Background task that deletes rooms inactive for 10+ minutes."""
+    while True:
+        await asyncio.sleep(60)  # Check every minute
+        try:
+            cutoff = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
+            # Delete rooms with no WebSocket participants AND inactive > 10 min
+            rooms = await db.study_rooms.find({}, {"_id": 0, "id": 1, "last_activity": 1}).to_list(100)
+            for room in rooms:
+                has_participants = len(room_manager.get_participants(room["id"])) > 0
+                last_activity = room.get("last_activity", room.get("created_at", ""))
+                if not has_participants and last_activity < cutoff:
+                    await db.study_rooms.delete_one({"id": room["id"]})
+                    logger.info(f"Auto-deleted inactive room: {room['id']}")
+        except Exception as e:
+            logger.error(f"Room cleanup error: {e}")
+
 @app.on_event("startup")
 async def startup():
     await seed_data()
+    # Clear all study rooms on startup (zero rooms by default)
+    await db.study_rooms.delete_many({})
+    logger.info("Cleared all study rooms on startup")
+    # Start background room cleanup
+    asyncio.create_task(room_cleanup_task())
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

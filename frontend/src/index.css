@@ -9,8 +9,8 @@ body {
     font-family: 'JetBrains Mono', monospace;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: #0A0A0A;
-    color: #FFFFFF;
+    background: #F9FAFB;
+    color: #1E293B;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -34,26 +34,26 @@ div:has(> a[href*="emergent.sh"]):not(nav) {
 
 @layer base {
     :root {
-        --background: 0 0% 4%;
-        --foreground: 0 0% 100%;
-        --card: 0 0% 4%;
-        --card-foreground: 0 0% 100%;
-        --popover: 0 0% 4%;
-        --popover-foreground: 0 0% 100%;
-        --primary: 51 98% 53%;
-        --primary-foreground: 0 0% 4%;
-        --secondary: 0 0% 15%;
+        --background: 210 20% 98%;
+        --foreground: 215 25% 17%;
+        --card: 0 0% 100%;
+        --card-foreground: 215 25% 17%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 215 25% 17%;
+        --primary: 224 58% 33%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 213 94% 68%;
         --secondary-foreground: 0 0% 100%;
-        --muted: 0 0% 15%;
-        --muted-foreground: 0 0% 70%;
-        --accent: 0 0% 10%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215 16% 47%;
+        --accent: 160 64% 52%;
         --accent-foreground: 0 0% 100%;
         --destructive: 0 84.2% 60.2%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 15%;
-        --input: 0 0% 15%;
-        --ring: 51 98% 53%;
-        --radius: 0rem;
+        --border: 214 32% 91%;
+        --input: 214 32% 91%;
+        --ring: 224 58% 33%;
+        --radius: 0.5rem;
     }
 }
 
@@ -62,20 +62,11 @@ div:has(> a[href*="emergent.sh"]):not(nav) {
     body { @apply bg-background text-foreground; }
 }
 
-@layer base {
-    [data-debug-wrapper="true"] { display: contents !important; }
-    [data-debug-wrapper="true"] > * {
-        margin-left: inherit; margin-right: inherit; margin-top: inherit; margin-bottom: inherit;
-        padding-left: inherit; padding-right: inherit; padding-top: inherit; padding-bottom: inherit;
-        column-gap: inherit; row-gap: inherit; gap: inherit;
-    }
-}
-
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0A0A0A; }
-::-webkit-scrollbar-thumb { background: #262626; }
-::-webkit-scrollbar-thumb:hover { background: #FACC15; }
+::-webkit-scrollbar-track { background: #F9FAFB; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #60A5FA; }
 
 /* Animations */
 @keyframes fadeInUp {
@@ -99,32 +90,16 @@ div:has(> a[href*="emergent.sh"]):not(nav) {
     to { opacity: 1; transform: scale(1); }
 }
 @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
-    50% { box-shadow: 0 0 20px 4px rgba(250, 204, 21, 0.15); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(30, 58, 138, 0); }
+    50% { box-shadow: 0 0 24px 4px rgba(30, 58, 138, 0.15); }
 }
 @keyframes float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+    50% { transform: translateY(-6px); }
 }
 @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
-}
-@keyframes typing {
-    from { width: 0; }
-    to { width: 100%; }
-}
-@keyframes grain {
-    0%, 100% { transform: translate(0, 0); }
-    10% { transform: translate(-5%, -10%); }
-    20% { transform: translate(-15%, 5%); }
-    30% { transform: translate(7%, -25%); }
-    40% { transform: translate(-5%, 25%); }
-    50% { transform: translate(-15%, 10%); }
-    60% { transform: translate(15%, 0%); }
-    70% { transform: translate(0%, 15%); }
-    80% { transform: translate(3%, 35%); }
-    90% { transform: translate(-10%, 10%); }
 }
 
 .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
@@ -143,7 +118,7 @@ div:has(> a[href*="emergent.sh"]):not(nav) {
 .stagger-6 { animation-delay: 0.3s; opacity: 0; }
 
 .shimmer-bg {
-    background: linear-gradient(90deg, transparent 0%, rgba(250,204,21,0.05) 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, rgba(96,165,250,0.06) 50%, transparent 100%);
     background-size: 200% 100%;
     animation: shimmer 3s ease-in-out infinite;
 }
@@ -152,8 +127,7 @@ div:has(> a[href*="emergent.sh"]):not(nav) {
     transition: all 0.25s ease;
 }
 .card-hover:hover {
-    background-color: rgba(250, 204, 21, 0.04);
-    border-color: rgba(250, 204, 21, 0.2);
+    box-shadow: 0 4px 20px rgba(30, 58, 138, 0.08);
     transform: translateY(-2px);
 }
 
@@ -162,20 +136,4 @@ div:has(> a[href*="emergent.sh"]):not(nav) {
 }
 .btn-press:active {
     transform: scale(0.97);
-}
-
-.glow-accent { box-shadow: 0 0 20px rgba(250, 204, 21, 0.3); }
-
-/* Grain overlay */
-.grain-overlay::before {
-    content: '';
-    position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    animation: grain 8s steps(10) infinite;
-    pointer-events: none;
-    z-index: 0;
 }

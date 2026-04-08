@@ -8,11 +8,9 @@ export default function Badges() {
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    API.get("/badges").then(r => setBadges(r.data)).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  useEffect(() => { API.get("/badges").then(r => setBadges(r.data)).catch(() => {}).finally(() => setLoading(false)); }, []);
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-[#FACC15] border-t-transparent animate-spin" /></div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-6 h-6 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" /></div>;
 
   const earned = badges.filter(b => b.earned);
   const locked = badges.filter(b => !b.earned);
@@ -20,25 +18,24 @@ export default function Badges() {
   return (
     <div data-testid="badges-page">
       <div className="mb-8 animate-fade-in-up stagger-1">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#FACC15] mb-2 font-mono">ACHIEVEMENTS</p>
-        <h2 className="font-['Outfit'] text-3xl font-bold tracking-tighter">Badges & Rewards</h2>
-        <p className="text-sm text-white/40 font-mono mt-2">{earned.length} of {badges.length} badges earned</p>
+        <p className="text-sm font-semibold text-[#1E3A8A] mb-1 font-['Outfit']">Achievements</p>
+        <h2 className="font-['Outfit'] text-3xl font-bold tracking-tight text-[#1E293B]">Badges & Rewards</h2>
+        <p className="text-sm text-[#94A3B8] font-mono mt-1">{earned.length} of {badges.length} badges earned</p>
       </div>
 
-      {/* Earned Badges */}
       {earned.length > 0 && (
         <div className="mb-10">
-          <p className="text-xs uppercase tracking-[0.15em] text-[#FACC15] mb-4 font-mono">EARNED</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-px bg-white/15">
+          <p className="text-sm font-semibold text-[#34D399] mb-4 font-['Outfit']">Earned</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {earned.map(badge => {
               const Icon = iconMap[badge.icon] || Zap;
               return (
-                <div key={badge.id} className="bg-[#0A0A0A] p-6 text-center group card-hover animate-fade-in-up" data-testid={`badge-${badge.id}`}>
-                  <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-[#FACC15] mb-4 glow-accent animate-float">
-                    <Icon size={28} className="text-[#FACC15]" />
+                <div key={badge.id} className="bg-white rounded-xl border border-[#34D399]/30 p-6 text-center card-hover animate-fade-in-up" data-testid={`badge-${badge.id}`}>
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[#34D399]/10 mb-4 animate-float">
+                    <Icon size={28} className="text-[#34D399]" />
                   </div>
-                  <h3 className="font-['Outfit'] font-semibold text-sm">{badge.name}</h3>
-                  <p className="text-[10px] text-white/40 font-mono mt-1">{badge.description}</p>
+                  <h3 className="font-['Outfit'] font-semibold text-sm text-[#1E293B]">{badge.name}</h3>
+                  <p className="text-[10px] text-[#64748B] font-mono mt-1">{badge.description}</p>
                 </div>
               );
             })}
@@ -46,20 +43,19 @@ export default function Badges() {
         </div>
       )}
 
-      {/* Locked Badges */}
       {locked.length > 0 && (
         <div>
-          <p className="text-xs uppercase tracking-[0.15em] text-white/40 mb-4 font-mono">LOCKED</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-px bg-white/15">
+          <p className="text-sm font-semibold text-[#94A3B8] mb-4 font-['Outfit']">Locked</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {locked.map(badge => {
               const Icon = iconMap[badge.icon] || Zap;
               return (
-                <div key={badge.id} className="bg-[#0A0A0A] p-6 text-center opacity-40" data-testid={`badge-locked-${badge.id}`}>
-                  <div className="inline-flex items-center justify-center w-16 h-16 border border-white/15 mb-4">
-                    <Icon size={28} className="text-white/30" />
+                <div key={badge.id} className="bg-white rounded-xl border border-[#E2E8F0] p-6 text-center opacity-50" data-testid={`badge-locked-${badge.id}`}>
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-[#F1F5F9] mb-4">
+                    <Icon size={28} className="text-[#94A3B8]" />
                   </div>
-                  <h3 className="font-['Outfit'] font-semibold text-sm text-white/60">{badge.name}</h3>
-                  <p className="text-[10px] text-white/30 font-mono mt-1">{badge.description}</p>
+                  <h3 className="font-['Outfit'] font-semibold text-sm text-[#64748B]">{badge.name}</h3>
+                  <p className="text-[10px] text-[#94A3B8] font-mono mt-1">{badge.description}</p>
                 </div>
               );
             })}
